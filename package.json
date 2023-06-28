@@ -1,0 +1,33 @@
+{
+  "type": "module",
+  "name": "waitlist",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "keywords": ["web-service", "api"],
+  "author": "Pawan Kumar",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc && nodemon dist/app.js",
+    "prod": "node dist/app.js",
+    "watch": "npx tsc --watch",
+    "dev:start": "docker compose up -d && pnpm install && pnpm run dev",
+    "prod:start": "pnpm install && pnpm run build && pnpm run prod"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.11.1",
+    "typescript": "^5.1.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.3.2",
+    "@types/pg": "^8.10.2",
+    "nodemon": "^2.0.22"
+  }
+}
