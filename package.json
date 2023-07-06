@@ -4,14 +4,18 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-  "keywords": ["web-service", "api"],
+  "keywords": [
+    "web-service",
+    "api"
+  ],
   "author": "Pawan Kumar",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc && nodemon dist/app.js",
+    "clean": "rm -rf dist node_modules",
+    "build": "pnpm clean && pnpm install && tsc",
+    "dev": "pnpm  build && nodemon dist/app.js",
     "prod": "node dist/app.js",
-    "watch": "npx tsc --watch",
+    "watch": "tsc --watch",
     "dev:start": "docker compose up -d && pnpm install && pnpm run dev",
     "prod:start": "pnpm install && pnpm run build && pnpm run prod"
   },
