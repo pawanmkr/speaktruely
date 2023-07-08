@@ -1,18 +1,25 @@
-import pkg from 'pg';
+import pkg from "pg";
 const { Pool } = pkg;
-import dotenv from 'dotenv';
-import path from 'path';
+import dotenv from "dotenv";
+import path from "path";
 
 dotenv.config({
-  path: path.join(process.cwd(), '.env')
+  path: path.join(process.cwd(), ".env"),
 });
 
-const client: pkg.Pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-  port: 5432,
-});
+const { DATABASE_URL, NODE_ENV } = process.env;
+
+let client: pkg.Pool;
+
+if (NODE_ENV === "production") {
+  client = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
+} else {
+  client = new Pool({ connectionString: DATABASE_URL });
+}
 
 export default client;
