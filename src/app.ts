@@ -6,25 +6,20 @@ import { router } from "./routes/routes.js";
 import client from "./config/db.js";
 import { PoolClient } from "pg";
 import { Tables } from "./controllers/createTables.js";
+import morgan from "morgan";
+import { errorMiddleware } from "./middlewares/index.js";
 
 const app: Express = express();
 const port: string | number = process.env.PORT || 8080;
 
 /* Middlewares */
+app.use(morgan("dev"));
 app.use(express.json());
 app.use((req: Request, res: Response, next) => {
   if (req.method === "POST" || req.method === "PUT") {
     app.use(express.urlencoded({ extended: true }));
   }
   next();
-});
-
-/* Async error handling middleware */
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err);
-  res.status(500).send({
-    error: err,
-  });
 });
 
 app.use(
@@ -36,6 +31,14 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
+
+app.use(errorMiddleware);
+
+// Error handling middleware with four parameters
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error("Unhandled Error:", error);
+  res.status(500).send("An unhandled error occurred.");
+});
 
 let retryCount: number = 5;
 while (retryCount) {
