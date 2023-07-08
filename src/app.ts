@@ -63,13 +63,13 @@ app.get("/health", (req: Request, res: Response, next) => {
   res.sendStatus(200);
 });
 
-app.use("/api/v1", router);
+app.use("/v1", router);
 
 function startServer() {
   app.listen(port, () => {
     let url: string = `http://localhost:${port}`;
     if (process.env.NODE_ENV === "production") {
-      url = "https://your-production-url.com";
+      url = "https://xserver.onrender.com";
     }
     console.log(`Server is running at ${url}\n`);
   });

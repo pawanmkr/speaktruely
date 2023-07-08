@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Post, PostNotFoundError } from "../models/index.js";
+import { log } from "console";
 
 export class PostController {
   static async createNewPost(req: Request, res: Response, next: NextFunction) {

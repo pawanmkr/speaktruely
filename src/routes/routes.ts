@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { body, validationResult } from "express-validator";
 import { UserController, PostController } from "../controllers/index.js";
 
@@ -7,7 +7,7 @@ export const router: Router = Router();
 router.post("/user/register", UserController.registerNewUser);
 router.post("/user/login", UserController.login);
 
-router.get("/post", (req: Request, res: Response) => {
+router.post("/post", (req: Request, res: Response, next: NextFunction) => {
   body("content")
     .notEmpty()
     .isLength({ max: 500 })
@@ -18,5 +18,5 @@ router.get("/post", (req: Request, res: Response) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  PostController.createNewPost;
+  PostController.createNewPost(req, res, next);
 });
