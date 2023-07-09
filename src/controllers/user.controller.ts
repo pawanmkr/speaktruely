@@ -47,8 +47,9 @@ export class UserController {
       return;
     }
     const payload: JwtPayload = {
-      fullName: fullName,
-      email: email,
+      fullName: registeredUser.fullName,
+      email: registeredUser.email,
+      username: registeredUser.username,
     };
     const token: string = jwt.sign(payload, JWT_SECRET_KEY);
     res.status(201).json({
@@ -84,6 +85,7 @@ export class UserController {
     const payload: JwtPayload = {
       fullName: existingUser.full_name,
       email: existingUser.email,
+      username: existingUser.username,
     };
     const token: string = jwt.sign(payload, JWT_SECRET_KEY);
     res.status(201).json({

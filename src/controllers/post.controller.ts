@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, Request, NextFunction } from "express";
+//import { AuthenticatedRequest } from "../middlewares/auth.js";
 import { Post, PostNotFoundError } from "../models/index.js";
 import { log } from "console";
 
 export class PostController {
   static async createNewPost(req: Request, res: Response, next: NextFunction) {
     try {
-      const { content, postedBy } = req.body;
-      const postId = await Post.addPost(content, postedBy);
+      const { content, username } = req.body;
+      const postId = await Post.addPost(content, username);
       res.status(201).json({ postId });
     } catch (error) {
       console.error("Error creating new post:", error);
@@ -20,6 +21,10 @@ export class PostController {
       if (isNaN(postId)) {
         return res.status(400).send("Invalid post ID.");
       }
+      const { username } = req.body;
+      /*
+       * First, Verify that the post belongs to user
+       */
 
       await Post.deletePost(postId);
       res.sendStatus(204);
