@@ -8,7 +8,9 @@ export class PostController {
     try {
       const { content, username } = req.body;
       const postId = await Post.addPost(content, username);
-      res.status(201).json({ postId });
+      if (postId) {
+        res.status(201).json({ postId });
+      }
     } catch (error) {
       console.error("Error creating new post:", error);
       next(error);
@@ -42,7 +44,7 @@ export class PostController {
     try {
       const {
         page = 1,
-        limit = 10,
+        limit = 100,
         sortBy = "created_at",
         sortDir = "desc",
       } = req.query;

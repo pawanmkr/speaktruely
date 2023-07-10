@@ -55,4 +55,22 @@ export class User {
     );
     return user ? user.rows[0] : null;
   }
+
+  static async getFullName(username: string): Promise<string | null> {
+    try {
+      const result = await client.query(
+        `SELECT full_name FROM users WHERE username = $1`,
+        [username]
+      );
+
+      if (result.rowCount > 0) {
+        return result.rows[0].full_name;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error retrieving user fullname:", error);
+      return null;
+    }
+  }
 }

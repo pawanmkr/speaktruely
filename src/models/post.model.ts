@@ -12,7 +12,7 @@ export class Post {
     const query = `
       CREATE TABLE IF NOT EXISTS post (
         id SERIAL PRIMARY KEY,
-        content VARCHAR(255),
+        content VARCHAR(500),
         reputation INTEGER DEFAULT 0,
         created_by VARCHAR(255),
         created_at TIMESTAMP DEFAULT NOW(),
@@ -40,6 +40,7 @@ export class Post {
       return postId;
     } catch (error) {
       console.error("Error adding post:", error);
+      return;
     }
   }
 
@@ -104,7 +105,9 @@ export class Post {
   ): Promise<any[]> {
     const offset = (page - 1) * limit;
     const query = `
-      SELECT * FROM post
+      SELECT post.id, users.full_name, users.username, post.content, post.reputation, post.created_at
+      FROM post
+      INNER JOIN users on users.username=post.created_by
       ORDER BY ${sortBy} ${sortDir}
       LIMIT $1 OFFSET $2;
     `;
