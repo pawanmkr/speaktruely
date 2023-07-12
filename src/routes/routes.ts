@@ -2,9 +2,10 @@ import { Router, Request, Response, NextFunction } from "express";
 import { body, validationResult } from "express-validator";
 import { UserController, PostController } from "../controllers/index.js";
 import { authorization } from "../middlewares/index.js";
-// import { AuthenticatedRequest } from "../middlewares/index.js";
 
 export const router: Router = Router();
+
+const voteTypes: string[] = ["UPVOTE", "DOWNVOTE"];
 
 router.post("/user/register", UserController.registerNewUser);
 router.post("/user/login", UserController.login);
@@ -24,16 +25,15 @@ router.post(
   }
 );
 
-// post creation route
 router.post(
   "/post",
   authorization,
+  body("content")
+    .notEmpty()
+    .withMessage("Content is required.")
+    .isLength({ max: 500 })
+    .withMessage("MAX 500 characters only!"),
   (req: Request, res: Response, next: NextFunction) => {
-    body("content")
-      .notEmpty()
-      .withMessage("Content is required.")
-      .isLength({ max: 500 })
-      .withMessage("MAX 500 characters only!");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -42,5 +42,33 @@ router.post(
   }
 );
 
-// Get All posts
 router.get("/post", PostController.getPosts);
+
+const votingBodyValidationChain = [
+  body("postId").notEmpty().withMessage("postId is Required!"),
+  body("type")
+    .notEmpty()
+    .withMessage("type cannot be empty!")
+    .isUppercase()
+    .isString()
+    .isIn(voteTypes)
+    .withMessage(`INVALID_TYPE, Accepted: "UPVOTE" OR "DOWNVOTE"`),
+];
+
+function validateResult(req: Request, res: Response, next: NextFunction) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+}
+
+router.post(
+  "/post/vote",
+  authorization,
+  votingBodyValidationChain,
+  validateResult,
+  PostController.handleVoting
+);
+
+router.get("/post/vote/state", authorization, PostController.checkVoteState);

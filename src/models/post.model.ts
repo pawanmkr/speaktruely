@@ -13,7 +13,6 @@ export class Post {
       CREATE TABLE IF NOT EXISTS post (
         id SERIAL PRIMARY KEY,
         content VARCHAR(500),
-        reputation INTEGER DEFAULT 0,
         created_by VARCHAR(255),
         created_at TIMESTAMP DEFAULT NOW(),
         CONSTRAINT fk_created_by FOREIGN KEY (created_by) REFERENCES users (username) ON DELETE CASCADE
@@ -105,11 +104,34 @@ export class Post {
   ): Promise<any[]> {
     const offset = (page - 1) * limit;
     const query = `
-      SELECT post.id, users.full_name, users.username, post.content, post.reputation, post.created_at
-      FROM post
-      INNER JOIN users on users.username=post.created_by
-      ORDER BY ${sortBy} ${sortDir}
-      LIMIT $1 OFFSET $2;
+      SELECT 
+        post.id, 
+        post.content, 
+        (
+          SELECT 
+            (
+              SELECT 
+                COUNT(CASE WHEN type = 'UPVOTE' THEN 1 END) - COUNT(
+                  CASE WHEN type = 'DOWNVOTE' THEN 1 END
+                )
+            ) AS reputation 
+          FROM 
+            vote 
+          WHERE 
+            post = post.id
+        ), 
+        users.full_name, 
+        users.username, 
+        post.created_at 
+      FROM post 
+        LEFT JOIN users 
+          ON post.created_by = users.username 
+        LEFT JOIN vote 
+          ON post.id = vote.post 
+        AND post.created_by = vote._user 
+      ORDER BY ${sortBy} ${sortDir} 
+      LIMIT $1 
+      OFFSET $2;  
     `;
     const values = [limit, offset];
 

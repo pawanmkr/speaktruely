@@ -1,7 +1,12 @@
 import { Response, Request, NextFunction } from "express";
-//import { AuthenticatedRequest } from "../middlewares/auth.js";
 import { Post, PostNotFoundError } from "../models/index.js";
-import { log } from "console";
+import { Vote } from "../models/vote.model.js";
+
+interface VoteBody {
+  postId: number;
+  username: string;
+  type: "UPVOTE" | "DOWNVOTE";
+}
 
 export class PostController {
   static async createNewPost(req: Request, res: Response, next: NextFunction) {
@@ -57,6 +62,37 @@ export class PostController {
       res.json(posts);
     } catch (error) {
       console.error("Error getting posts:", error);
+      next(error);
+    }
+  }
+
+  static async handleVoting(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { postId, username, type }: VoteBody = req.body;
+      const vote = await Vote.insertVote(postId, username, type);
+      if (!vote) {
+        res.status(404);
+        return;
+      }
+      res.status(201).send(vote);
+    } catch (error) {
+      console.error("Failed to vote:", error);
+      next(error);
+    }
+  }
+
+  static async checkVoteState(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { username }: VoteBody = req.body;
+      const postId = parseInt(req.query.postId as string);
+      const vote = await Vote.getVote(postId, username);
+      if (!vote) {
+        res.status(200).json({ type: "NEUTRAL" });
+        return;
+      }
+      res.status(200).json({ type: vote.type });
+    } catch (error) {
+      console.error("Failed to find State:", error);
       next(error);
     }
   }

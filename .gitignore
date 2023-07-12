@@ -6,3 +6,5 @@ pnpm-*.yaml
 package-*.json
 dist/
 .env.production
+queries.sql
+todo
