@@ -34,9 +34,8 @@ export class Post {
         throw new Error("Content and created_by fields are required.");
       }
 
-      const postId = await Post.insertPost(content, created_by);
-      console.log(`Post with ID ${postId} created successfully.`);
-      return postId;
+      const post = await Post.insertPost(content, created_by);
+      return post;
     } catch (error) {
       console.error("Error adding post:", error);
       return;
@@ -64,12 +63,12 @@ export class Post {
     const query = `
       INSERT INTO post (content, created_by)
       VALUES ($1, $2)
-      RETURNING id;
+      RETURNING *;
     `;
     const values = [content, created_by];
 
     const { rows } = await client.query(query, values);
-    return rows[0].id;
+    return rows[0];
   }
 
   static async removePost(postId: number): Promise<void> {

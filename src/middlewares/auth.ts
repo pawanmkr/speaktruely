@@ -1,4 +1,3 @@
-import { log } from "console";
 import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
@@ -12,10 +11,6 @@ const jwtSecret: string = process.env.JWT_SECRET_KEY || "";
 if (!jwtSecret) {
   throw new Error("Unable to retrieve JWT Secret Key from env");
 }
-/* 
-export interface AuthenticatedRequest extends Request {
-  user?: string;
-} */
 
 export async function authorization(
   req: Request,

@@ -12,9 +12,9 @@ export class PostController {
   static async createNewPost(req: Request, res: Response, next: NextFunction) {
     try {
       const { content, username } = req.body;
-      const postId = await Post.addPost(content, username);
-      if (postId) {
-        res.status(201).json({ postId });
+      const post = await Post.addPost(content, username);
+      if (post) {
+        res.status(201).send(post);
       }
     } catch (error) {
       console.error("Error creating new post:", error);

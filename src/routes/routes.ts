@@ -25,6 +25,7 @@ router.post(
   }
 );
 
+// create new post
 router.post(
   "/post",
   authorization,
@@ -42,7 +43,8 @@ router.post(
   }
 );
 
-router.get("/post", PostController.getPosts);
+// get all posts for home feed
+router.get("/post", authorization, PostController.getPosts);
 
 const votingBodyValidationChain = [
   body("postId").notEmpty().withMessage("postId is Required!"),
@@ -63,6 +65,7 @@ function validateResult(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// voting
 router.post(
   "/post/vote",
   authorization,
@@ -71,4 +74,5 @@ router.post(
   PostController.handleVoting
 );
 
+// get vote state
 router.get("/post/vote/state", authorization, PostController.checkVoteState);

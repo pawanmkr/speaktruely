@@ -48,17 +48,13 @@ export class UserController {
       return;
     }
     const payload: JwtPayload = {
-      fullName: registeredUser.fullName,
+      fullName: registeredUser.full_name,
       email: registeredUser.email,
       username: registeredUser.username,
     };
-    const token: string = jwt.sign(payload, JWT_SECRET_KEY);
-    res.status(201).json({
-      fullName: registeredUser.full_name,
-      username: registeredUser.username,
-      email: registeredUser.email,
-      token: token,
-    });
+    console.log(payload);
+    const token = jwt.sign(payload, JWT_SECRET_KEY);
+    res.status(201).send(token);
   }
 
   static async login(req: Request, res: Response) {
@@ -89,11 +85,6 @@ export class UserController {
       username: existingUser.username,
     };
     const token: string = jwt.sign(payload, JWT_SECRET_KEY);
-    res.status(201).json({
-      fullName: existingUser.full_name,
-      username: existingUser.username,
-      email: existingUser.email,
-      token: token,
-    });
+    res.status(201).send(token);
   }
 }
