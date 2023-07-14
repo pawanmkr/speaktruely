@@ -6,7 +6,6 @@ import { ExtendedRequest } from "../middlewares/index.js";
 
 interface VoteBody {
   postId: number;
-  username: string;
   type: "UPVOTE" | "DOWNVOTE";
 }
 
@@ -91,9 +90,21 @@ export class PostController {
     }
   }
 
-  static async handleVoting(req: Request, res: Response, next: NextFunction) {
+  static async handleVoting(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const { postId, username, type }: VoteBody = req.body;
+      const { postId, type }: VoteBody = req.body;
+      const { username } = req;
+      if (
+        username === undefined ||
+        postId === undefined ||
+        type === undefined
+      ) {
+        res.status(500).send("postId, type or username not found");
+      }
       const vote = await Vote.insertVote(postId, username, type);
       if (!vote) {
         res.status(404);
@@ -106,9 +117,16 @@ export class PostController {
     }
   }
 
-  static async checkVoteState(req: Request, res: Response, next: NextFunction) {
+  static async checkVoteState(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const { username }: VoteBody = req.body;
+      const { username } = req;
+      if (username === undefined) {
+        res.status(500).send("No username found");
+      }
       const postId = parseInt(req.query.postId as string);
       const vote = await Vote.getVote(postId, username);
       if (!vote) {
