@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { body, validationResult } from "express-validator";
 import { UserController, PostController } from "../controllers/index.js";
-import { authorization } from "../middlewares/index.js";
+import { authorization, upload } from "../middlewares/index.js";
 
 export const router: Router = Router();
 
@@ -29,6 +29,7 @@ router.post(
 router.post(
   "/post",
   authorization,
+  upload.array("files", 10),
   body("content")
     .notEmpty()
     .withMessage("Content is required.")
@@ -39,8 +40,9 @@ router.post(
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    PostController.createNewPost(req, res, next);
-  }
+    next();
+  },
+  PostController.createNewPost
 );
 
 // get all posts for home feed

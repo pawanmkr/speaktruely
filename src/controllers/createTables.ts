@@ -1,8 +1,4 @@
-import { Comment } from "../models/comment.model.js";
-import { Post } from "../models/post.model.js";
-import { Topic } from "../models/topic.model.js";
-import { User } from "../models/user.model.js";
-import { Vote } from "../models/vote.model.js";
+import { Comment, Post, Topic, User, Vote, Media } from "../models/index.js";
 
 export class Tables {
   static async createTables() {
@@ -12,6 +8,7 @@ export class Tables {
       await Post.createPostTable();
       await Vote.createVoteTable();
       await Comment.createCommentTable();
+      await Media.createMediaTable();
     } catch (error) {
       console.log(error);
       throw new Error("Failed to create tables");

@@ -1,6 +1,8 @@
+import { QueryResultRow } from "pg";
 import { Response, Request, NextFunction } from "express";
-import { Post, PostNotFoundError } from "../models/index.js";
-import { Vote } from "../models/vote.model.js";
+import { Post, PostNotFoundError, Vote, Media } from "../models/index.js";
+import { uploadMedia } from "../lib/services/azureStorage.js";
+import { ExtendedRequest } from "../middlewares/index.js";
 
 interface VoteBody {
   postId: number;
@@ -9,12 +11,35 @@ interface VoteBody {
 }
 
 export class PostController {
-  static async createNewPost(req: Request, res: Response, next: NextFunction) {
+  static async createNewPost(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const { content, username } = req.body;
-      const post = await Post.addPost(content, username);
-      if (post) {
-        res.status(201).send(post);
+      const { content } = req.body;
+      const username = req.username;
+      const fileUploadPromises = [];
+      for (const fileKey of Object.keys(req.files)) {
+        const file = req.files[fileKey];
+        fileUploadPromises.push(uploadMedia(file));
+      }
+      const blobs = await Promise.all(fileUploadPromises);
+      const post: QueryResultRow = await Post.addPost(content, username);
+      if (!post) {
+        res.status(500).send("Failed to create the post");
+        return;
+      }
+      const saveUrlPromises = [];
+      for (const blob of blobs) {
+        saveUrlPromises.push(Media.insertPost(blob.name, post.id, blob.url));
+      }
+      const response = await Promise.all(saveUrlPromises);
+      if (response) {
+        const newPost: QueryResultRow = await Post.getFullPostById(post.id);
+        if (newPost) {
+          res.status(201).send(newPost);
+        }
       }
     } catch (error) {
       console.error("Error creating new post:", error);
@@ -28,7 +53,7 @@ export class PostController {
       if (isNaN(postId)) {
         return res.status(400).send("Invalid post ID.");
       }
-      const { username } = req.body;
+      // const { username } = req.body;
       /*
        * First, Verify that the post belongs to user
        */

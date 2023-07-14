@@ -1,3 +1,4 @@
+import { QueryResultRow } from "pg";
 import client from "../config/db.js";
 
 export class PostNotFoundError extends Error {
@@ -28,7 +29,7 @@ export class Post {
   static async addPost(
     content: string,
     created_by: string
-  ): Promise<number | undefined> {
+  ): Promise<QueryResultRow | undefined> {
     try {
       if (!content || !created_by) {
         throw new Error("Content and created_by fields are required.");
@@ -48,7 +49,7 @@ export class Post {
         throw new Error("Post ID is required.");
       }
 
-      const post = await Post.getPostById(postId);
+      await Post.getPostById(postId);
       await Post.removePost(postId);
       console.log(`Post with ID ${postId} deleted successfully.`);
     } catch (error) {
@@ -59,7 +60,7 @@ export class Post {
   static async insertPost(
     content: string,
     created_by: string
-  ): Promise<number> {
+  ): Promise<QueryResultRow> {
     const query = `
       INSERT INTO post (content, created_by)
       VALUES ($1, $2)
@@ -81,7 +82,7 @@ export class Post {
     await client.query(query, values);
   }
 
-  static async getPostById(postId: number): Promise<any> {
+  static async getPostById(postId: number): Promise<QueryResultRow> {
     const query = `
       SELECT * FROM post
       WHERE id = $1;
@@ -100,34 +101,34 @@ export class Post {
     limit: number,
     sortBy: string,
     sortDir: string
-  ): Promise<any[]> {
+  ): Promise<QueryResultRow[]> {
     const offset = (page - 1) * limit;
     const query = `
       SELECT 
-        post.id, 
-        post.content, 
-        (
-          SELECT 
-            (
+        post.id, post.content, (
+          SELECT (
               SELECT 
-                COUNT(CASE WHEN type = 'UPVOTE' THEN 1 END) - COUNT(
-                  CASE WHEN type = 'DOWNVOTE' THEN 1 END
+                COUNT(
+                  CASE 
+                    WHEN type = 'UPVOTE' THEN 1 
+                  END
+                ) - COUNT(
+                  CASE 
+                    WHEN type = 'DOWNVOTE' THEN 1 
+                  END
                 )
             ) AS reputation 
-          FROM 
-            vote 
-          WHERE 
-            post = post.id
-        ), 
-        users.full_name, 
-        users.username, 
-        post.created_at 
+          FROM vote 
+          WHERE post = post.id
+        ), (
+          SELECT string_agg(DISTINCT name, ',')
+          FROM media
+          WHERE post.id = media.post
+        ) AS media, 
+        users.full_name, users.username, post.created_at 
       FROM post 
-        LEFT JOIN users 
-          ON post.created_by = users.username 
-        LEFT JOIN vote 
-          ON post.id = vote.post 
-        AND post.created_by = vote._user 
+        LEFT JOIN users ON post.created_by = users.username 
+        LEFT JOIN vote ON post.id = vote.post AND post.created_by = vote._user 
       ORDER BY ${sortBy} ${sortDir} 
       LIMIT $1 
       OFFSET $2;  
@@ -136,5 +137,40 @@ export class Post {
 
     const { rows } = await client.query(query, values);
     return rows;
+  }
+
+  static async getFullPostById(postId: number): Promise<QueryResultRow> {
+    const query = `
+      SELECT 
+        post.id, post.content, (
+          SELECT (
+              SELECT 
+                COUNT(
+                  CASE 
+                    WHEN type = 'UPVOTE' THEN 1 
+                  END
+                ) - COUNT(
+                  CASE 
+                    WHEN type = 'DOWNVOTE' THEN 1 
+                  END
+                )
+            ) AS reputation 
+          FROM vote 
+          WHERE post = post.id
+        ), (
+          SELECT string_agg(DISTINCT name, ',')
+          FROM media
+          WHERE post.id = media.post
+        ) AS media, 
+        users.full_name, users.username, post.created_at 
+      FROM post 
+        LEFT JOIN users ON post.created_by = users.username 
+        LEFT JOIN vote ON post.id = vote.post AND post.created_by = vote._user 
+      WHERE post.id=$1 
+    `;
+    const values = [postId];
+
+    const { rows } = await client.query(query, values);
+    return rows[0];
   }
 }

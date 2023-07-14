@@ -38,6 +38,7 @@ app.use(errorMiddleware);
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   console.error("Unhandled Error:", error);
   res.status(500).send("An unhandled error occurred.");
+  next();
 });
 
 let retryCount: number = 5;
@@ -59,7 +60,7 @@ while (retryCount) {
 }
 
 // Health check
-app.get("/health", (req: Request, res: Response, next) => {
+app.get("/health", (req: Request, res: Response) => {
   res.sendStatus(200);
 });
 

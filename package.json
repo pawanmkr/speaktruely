@@ -12,7 +12,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf dist node_modules",
-    "build": "pnpm install && tsc",
+    "build": "mkdir tmp && pnpm install && tsc",
     "dev": "nodemon dist/app.js",
     "build:dev": "pnpm build && pnpm dev",
     "clean:build:dev": "pnpm clean && pnpm build && pnpm dev",
@@ -22,7 +22,10 @@
     "prod:start": "pnpm install && pnpm run build && pnpm run prod"
   },
   "dependencies": {
+    "@azure/identity": "^3.2.3",
+    "@azure/storage-blob": "^12.14.0",
     "@types/morgan": "^1.9.4",
+    "@types/multer": "^1.4.7",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -30,6 +33,7 @@
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",
+    "multer": "1.4.5-lts.1",
     "pg": "^8.11.1",
     "typescript": "^5.1.5"
   },
@@ -39,6 +43,9 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.3.2",
     "@types/pg": "^8.10.2",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.44.0",
     "nodemon": "^2.0.22"
   }
 }

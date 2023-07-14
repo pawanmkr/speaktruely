@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import dotenv from "dotenv";
 import path from "path";
@@ -6,7 +6,6 @@ import jwt, { Secret, JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
 import { faker } from "@faker-js/faker";
 import { QueryResultRow } from "pg";
-import { log } from "console";
 
 dotenv.config({
   path: path.join(process.cwd(), ".env"),

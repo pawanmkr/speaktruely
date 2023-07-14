@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 import path from "path";
+
+export interface ExtendedRequest extends Request {
+  username: string;
+}
 
 dotenv.config({
   path: path.join(process.cwd(), ".env"),
@@ -13,7 +17,7 @@ if (!jwtSecret) {
 }
 
 export async function authorization(
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
   next: NextFunction
 ) {
@@ -21,12 +25,12 @@ export async function authorization(
   const token: string = (authHeader && authHeader.split(" ")[1]) || "";
 
   if (token) {
-    jwt.verify(token, jwtSecret, (err: any, user: any) => {
+    jwt.verify(token, jwtSecret, (err: JsonWebTokenError, user: JwtPayload) => {
       if (err) {
         console.error(err);
         return res.status(403).json({ error: "Failed to authenticate token." });
       }
-      req.body.username = user.username;
+      req.username = user.username;
       next();
     });
   } else {
