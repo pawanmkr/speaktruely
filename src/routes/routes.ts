@@ -29,11 +29,9 @@ router.post(
 router.post(
   "/post",
   authorization,
-  upload.array("files", 10),
   body("content")
-    .notEmpty()
-    .withMessage("Content is required.")
-    .isLength({ max: 500 })
+    .optional()
+    .isLength({ max: 1000 })
     .withMessage("MAX 500 characters only!"),
   (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
@@ -42,6 +40,7 @@ router.post(
     }
     next();
   },
+  upload.array("files", 10),
   PostController.createNewPost
 );
 

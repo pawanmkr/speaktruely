@@ -26,8 +26,7 @@ export class PostController {
       const blobs = await Promise.all(fileUploadPromises);
       const post: QueryResultRow = await Post.addPost(content, username);
       if (!post) {
-        res.status(500).send("Failed to create the post");
-        return;
+        return res.status(404).send("Failed to create the post");
       }
       const saveUrlPromises = [];
       for (const blob of blobs) {
