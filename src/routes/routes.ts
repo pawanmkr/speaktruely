@@ -52,6 +52,12 @@ router.post(
   PostController.createNewPost
 );
 
+// get all thread ids by post
+router.get("/post/threads/:postId", authorization, PostController.getThreadIds);
+
+// get thread by id
+router.get("/post/:threadId", authorization, PostController.getThreadsById);
+
 // get all posts for home feed
 router.get("/post", authorization, PostController.getPosts);
 

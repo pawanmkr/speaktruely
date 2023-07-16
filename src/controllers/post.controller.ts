@@ -151,4 +151,30 @@ export class PostController {
       next(error);
     }
   }
+
+  static async getThreadsById(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const threadId = parseInt(req.params.threadId);
+      const thread: QueryResultRow = await Post.getFullPostById(threadId);
+      res.status(200).send(thread);
+    } catch (error) {
+      console.error(`Failed to fetch the thread:`, error);
+      next(error);
+    }
+  }
+
+  static async getThreadIds(req: Request, res: Response, next: NextFunction) {
+    try {
+      const postId = parseInt(req.params.postId);
+      const ids = await Post.getThreadIdsByPost(postId);
+      res.status(200).send(ids);
+    } catch (error) {
+      console.error("Failed to retreive thread ids:", error);
+      next(error);
+    }
+  }
 }

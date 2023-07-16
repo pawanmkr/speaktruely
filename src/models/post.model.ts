@@ -138,7 +138,7 @@ export class Post {
         LEFT JOIN (
             SELECT
                 thread,
-                array_agg(id) AS threads
+                COUNT(id) AS threads
             FROM post
             GROUP BY thread
         ) AS thread_ids ON post.id = thread_ids.thread
@@ -155,35 +155,45 @@ export class Post {
 
   static async getFullPostById(postId: number): Promise<QueryResultRow> {
     const query = `
-      SELECT
-        post.id, post.thread, post.content, (
-          SELECT (
-              SELECT
-                COUNT(
-                  CASE
-                    WHEN type = 'UPVOTE' THEN 1
-                  END
-                ) - COUNT(
-                  CASE
-                    WHEN type = 'DOWNVOTE' THEN 1
-                  END
-                )
-            ) AS reputation
-          FROM vote
-          WHERE post = post.id
-        ), (
-          SELECT array_agg(DISTINCT name)
-          FROM media
-          WHERE post.id = media.post
-        ) AS media,
-        users.full_name, users.username, post.created_at
-      FROM post
+        SELECT
+            post.id,
+            post.thread,
+            post.content,
+            users.full_name,
+            users.username,
+            post.has_threads,
+            post.created_at,
+            vote_reputation.reputation,
+            media_names.media,
+            thread_ids.threads
+        FROM post
         LEFT JOIN users ON post.created_by = users.username
+        LEFT JOIN (
+            SELECT
+                post,
+                COUNT(CASE WHEN type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN type = 'DOWNVOTE' THEN 1 END) AS reputation
+            FROM vote
+            GROUP BY post
+        ) AS vote_reputation ON post.id = vote_reputation.post
+        LEFT JOIN (
+            SELECT
+                post.id,
+                array_agg(DISTINCT name) AS media
+            FROM media
+            JOIN post ON post.id = media.post
+            GROUP BY post.id
+        ) AS media_names ON post.id = media_names.id
+        LEFT JOIN (
+            SELECT
+                thread,
+                COUNT(id) AS threads
+            FROM post
+            GROUP BY thread
+        ) AS thread_ids ON post.id = thread_ids.thread
         LEFT JOIN vote ON post.id = vote.post AND post.created_by = vote._user
-      WHERE post.id=$1
+        WHERE post.id = $1;
     `;
     const values = [postId];
-
     const { rows } = await client.query(query, values);
     return rows[0];
   }
@@ -201,5 +211,13 @@ export class Post {
       UPDATE post SET has_threads = TRUE WHERE id=$1;
     `;
     await client.query(query, [tieThreadWithPostId]);
+  }
+
+  static async getThreadIdsByPost(postId: number) {
+    const query = `
+      SELECT array_agg(id) FROM post WHERE thread=$1;
+    `;
+    const { rows } = await client.query(query, [postId]);
+    return rows[0].array_agg;
   }
 }
