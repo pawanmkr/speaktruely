@@ -25,14 +25,22 @@ router.post(
   }
 );
 
-// create new post
-router.post(
-  "/post",
-  authorization,
+const createNewPostValidationChain = [
   body("content")
     .optional()
     .isLength({ max: 1000 })
     .withMessage("MAX 500 characters only!"),
+  body("thread")
+    .optional()
+    .isString()
+    .withMessage("Thread: Expected String got Number"),
+];
+
+// create new post
+router.post(
+  "/post",
+  authorization,
+  createNewPostValidationChain,
   (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

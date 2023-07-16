@@ -16,15 +16,32 @@ export class PostController {
     next: NextFunction
   ) {
     try {
+      const tieThreadWithPostId = req.body.thread;
       const { content } = req.body;
       const username = req.username;
+
       const fileUploadPromises = [];
       for (const fileKey of Object.keys(req.files)) {
         const file = req.files[fileKey];
         fileUploadPromises.push(uploadMedia(file));
       }
       const blobs = await Promise.all(fileUploadPromises);
-      const post: QueryResultRow = await Post.addPost(content, username);
+      if (tieThreadWithPostId) {
+        const result: QueryResultRow = await Post.checkIfPostIsAlreadyThreaded(
+          tieThreadWithPostId
+        );
+        if (result.thread !== null) {
+          return res
+            .status(501)
+            .send("Error: Threads can only be created with original post");
+        }
+        await Post.updatePostThreadState(tieThreadWithPostId);
+      }
+      const post: QueryResultRow = await Post.addPost(
+        tieThreadWithPostId,
+        content,
+        username
+      );
       if (!post) {
         return res.status(404).send("Failed to create the post");
       }
@@ -32,13 +49,9 @@ export class PostController {
       for (const blob of blobs) {
         saveUrlPromises.push(Media.insertPost(blob.name, post.id, blob.url));
       }
-      const response = await Promise.all(saveUrlPromises);
-      if (response) {
-        const newPost: QueryResultRow = await Post.getFullPostById(post.id);
-        if (newPost) {
-          res.status(201).send(newPost);
-        }
-      }
+      await Promise.all(saveUrlPromises);
+      const newPost: QueryResultRow = await Post.getFullPostById(post.id);
+      res.status(201).send(newPost);
     } catch (error) {
       console.error("Error creating new post:", error);
       next(error);
