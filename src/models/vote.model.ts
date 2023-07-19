@@ -10,7 +10,7 @@ export class Vote {
           id SERIAL PRIMARY KEY,
           post INTEGER,
           user_id INTEGER,
-          vote_type VARCHAR(8) NOT NULL,
+          vote_type INTEGER NOT NULL DEFAULT 0,
           created_at TIMESTAMP DEFAULT NOW(),
           CONSTRAINT fk_post FOREIGN KEY (post) REFERENCES post (id) ON DELETE CASCADE,
           CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
@@ -26,7 +26,7 @@ export class Vote {
   static async insertVote(
     postId: number,
     userId: number,
-    type: string
+    type: number
   ): Promise<QueryResultRow> {
     const existingVote = await this.getVote(postId, userId);
 

@@ -132,7 +132,7 @@ export class Post {
         LEFT JOIN (
             SELECT
                 post,
-                COUNT(CASE WHEN vote_type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN vote_type = 'DOWNVOTE' THEN 1 END) AS reputation
+                COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
             FROM vote
             GROUP BY post
         ) AS vote_reputation ON post.id = vote_reputation.post
@@ -180,7 +180,7 @@ export class Post {
         LEFT JOIN (
             SELECT
                 post,
-                COUNT(CASE WHEN vote_type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN vote_type = 'DOWNVOTE' THEN 1 END) AS reputation
+                COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
             FROM vote
             GROUP BY post
         ) AS vote_reputation ON post.id = vote_reputation.post

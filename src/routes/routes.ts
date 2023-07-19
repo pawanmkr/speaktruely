@@ -5,7 +5,7 @@ import { authorization, upload } from "../middlewares/index.js";
 
 export const router: Router = Router();
 
-const voteTypes: string[] = ["UPVOTE", "DOWNVOTE"];
+const VoteType = [0, 1, -1];
 
 router.post("/user/register", UserController.registerNewUser);
 router.post("/user/login", UserController.login);
@@ -60,10 +60,9 @@ const votingBodyValidationChain = [
   body("type")
     .notEmpty()
     .withMessage("type cannot be empty!")
-    .isUppercase()
-    .isString()
-    .isIn(voteTypes)
-    .withMessage(`INVALID_TYPE, Accepted: "UPVOTE" OR "DOWNVOTE"`),
+    .isInt()
+    .isIn(VoteType)
+    .withMessage(`INVALID_TYPE, Accepted: 1, 0 or -1`),
 ];
 
 function validateResult(req: Request, res: Response, next: NextFunction) {
