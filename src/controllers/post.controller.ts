@@ -10,11 +10,6 @@ import {
 import { uploadMedia } from "../lib/services/azureStorage.js";
 import { ExtendedRequest } from "../middlewares/index.js";
 
-interface VoteBody {
-  postId: number;
-  type: "UPVOTE" | "DOWNVOTE";
-}
-
 export class PostController {
   static async createNewPost(
     req: ExtendedRequest,
@@ -118,7 +113,7 @@ export class PostController {
     next: NextFunction
   ) {
     try {
-      const { postId, type }: VoteBody = req.body;
+      const { postId, type } = req.body;
       const { userid } = req;
       if (userid === undefined || postId === undefined || type === undefined) {
         res.status(500).send("postId, type or userid not found");
