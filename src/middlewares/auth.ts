@@ -4,7 +4,7 @@ import jwt, { JsonWebTokenError, JwtPayload } from "jsonwebtoken";
 import path from "path";
 
 export interface ExtendedRequest extends Request {
-  username: string;
+  userid: number;
 }
 
 dotenv.config({
@@ -30,7 +30,7 @@ export async function authorization(
         console.error(err);
         return res.status(403).json({ error: "Failed to authenticate token." });
       }
-      req.username = user.username;
+      req.userid = user.userid;
       next();
     });
   } else {

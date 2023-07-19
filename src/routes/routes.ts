@@ -52,12 +52,6 @@ router.post(
   PostController.createNewPost
 );
 
-// get all thread ids by post
-router.get("/post/threads/:postId", authorization, PostController.getThreadIds);
-
-// get thread by id
-router.get("/post/:threadId", authorization, PostController.getThreadsById);
-
 // get all posts for home feed
 router.get("/post", authorization, PostController.getPosts);
 
@@ -91,3 +85,15 @@ router.post(
 
 // get vote state
 router.get("/post/vote/state", authorization, PostController.checkVoteState);
+
+// add comment to post
+router.post("/post/comment", authorization, PostController.addCommentInPost);
+
+// get comments for particular post
+router.get("/post/comments", authorization, PostController.getCommentsForPost);
+
+// get all thread ids by post
+router.get("/post/threads/:postId", authorization, PostController.getThreadIds);
+
+// get thread by id
+router.get("/post/:threadId", authorization, PostController.getThreadsById);

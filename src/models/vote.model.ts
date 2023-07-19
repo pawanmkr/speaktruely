@@ -7,14 +7,13 @@ export class Vote {
     const query = `
       CREATE TABLE 
         IF NOT EXISTS vote (
-          id SERIAL UNIQUE,
-          post INTEGER NOT NULL,
-          _user VARCHAR(255) NOT NULL,
-          type VARCHAR(8) NOT NULL,
+          id SERIAL PRIMARY KEY,
+          post INTEGER,
+          user_id INTEGER,
+          vote_type VARCHAR(8) NOT NULL,
           created_at TIMESTAMP DEFAULT NOW(),
           CONSTRAINT fk_post FOREIGN KEY (post) REFERENCES post (id) ON DELETE CASCADE,
-          CONSTRAINT fk_user FOREIGN KEY (_user) REFERENCES users (username) ON DELETE CASCADE,
-          PRIMARY KEY (id)
+          CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         );
     `;
     try {
@@ -26,28 +25,28 @@ export class Vote {
 
   static async insertVote(
     postId: number,
-    username: string,
+    userId: number,
     type: string
   ): Promise<QueryResultRow> {
-    const existingVote = await this.getVote(postId, username);
+    const existingVote = await this.getVote(postId, userId);
 
     if (existingVote) {
-      if (existingVote.type === type) {
-        const row = await this.removeVote(postId, username);
+      if (existingVote.vote_type === type) {
+        const row = await this.removeVote(postId, userId);
         return row;
       } else {
         const query = `
-          UPDATE vote SET type=$1 WHERE post=$2 AND _user=$3 RETURNING *;
+          UPDATE vote SET vote_type=$1 WHERE post=$2 AND user_id=$3 RETURNING *;
         `;
-        const values = [type, postId, username];
+        const values = [type, postId, userId];
         const { rows } = await client.query(query, values);
         return rows[0];
       }
     } else {
       const query = `
-        INSERT INTO vote (post, _user, type) VALUES($1, $2, $3) RETURNING *;
+        INSERT INTO vote (post, user_id, vote_type) VALUES($1, $2, $3) RETURNING *;
       `;
-      const values = [postId, username, type];
+      const values = [postId, userId, type];
       const { rows } = await client.query(query, values);
       if (rows.length === 0) {
         throw new PostNotFoundError(`Post with ID ${postId} not found.`);
@@ -58,12 +57,12 @@ export class Vote {
 
   static async removeVote(
     postId: number,
-    username: string
+    userId: number
   ): Promise<QueryResultRow> {
     const query = `
-      DELETE FROM vote WHERE post=$1 AND _user=$2 RETURNING *;
+      DELETE FROM vote WHERE post=$1 AND user_id=$2 RETURNING *;
     `;
-    const values = [postId, username];
+    const values = [postId, userId];
     const { rows } = await client.query(query, values);
     if (rows.length === 0) {
       throw new PostNotFoundError(`Post with ID ${postId} not found.`);
@@ -73,12 +72,12 @@ export class Vote {
 
   static async getVote(
     postId: number,
-    username: string
+    userId: number
   ): Promise<QueryResultRow | null> {
     const query = `
-      SELECT * FROM vote WHERE post=$1 AND _user=$2;
+      SELECT * FROM vote WHERE post=$1 AND user_id=$2;
     `;
-    const values = [postId, username];
+    const values = [postId, userId];
     const { rows } = await client.query(query, values);
     if (rows.length === 0) {
       return null;

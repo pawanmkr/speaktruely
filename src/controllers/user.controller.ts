@@ -47,7 +47,8 @@ export class UserController {
       return;
     }
     const payload: JwtPayload = {
-      fullName: registeredUser.full_name,
+      userid: registeredUser.id,
+      fullname: registeredUser.full_name,
       email: registeredUser.email,
       username: registeredUser.username,
     };
@@ -79,7 +80,8 @@ export class UserController {
       return;
     }
     const payload: JwtPayload = {
-      fullName: existingUser.full_name,
+      userid: existingUser.id,
+      fullname: existingUser.full_name,
       email: existingUser.email,
       username: existingUser.username,
     };
