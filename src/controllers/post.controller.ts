@@ -141,8 +141,8 @@ export class PostController {
       }
       const postId = parseInt(req.query.post_id as string);
       const vote = await Vote.getVote(postId, userid);
-      if (!vote) {
-        return res.status(204).json({ type: "NEUTRAL" });
+      if (vote === null) {
+        return res.status(204).json({ type: 0 });
       }
       res.status(200).json({ type: vote.vote_type });
     } catch (error) {
@@ -166,11 +166,20 @@ export class PostController {
     }
   }
 
-  static async getThreadIds(req: Request, res: Response, next: NextFunction) {
+  static async getThreadsForPost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const postId = parseInt(req.params.postId);
-      const ids = await Post.getThreadIdsByPost(postId);
-      res.status(200).send(ids);
+      const { sortBy = "reputation", sortDir = "asc" } = req.query;
+      const postId = parseInt(req.query.post_id as string);
+      const threads = await Post.getThreadsByPostId(
+        postId,
+        sortBy.toString(),
+        sortDir.toString()
+      );
+      res.status(200).send(threads);
     } catch (error) {
       console.error("Failed to retreive thread ids:", error);
       next(error);

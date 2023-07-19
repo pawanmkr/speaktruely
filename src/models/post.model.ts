@@ -215,11 +215,51 @@ export class Post {
     return rows[0];
   }
 
-  static async getThreadIdsByPost(postId: number) {
+  static async getThreadsByPostId(
+    postId: number,
+    sortBy: string,
+    sortDir: string
+  ) {
     const query = `
-      SELECT array_agg(id) FROM post WHERE thread=$1;
+      SELECT
+          post.id,
+          post.thread,
+          post.content,
+          users.id AS user_id,
+          users.full_name,
+          users.username,
+          post.created_at,
+          vote_reputation.reputation,
+          media_names.media
+      FROM post
+      LEFT JOIN users ON post.user_id = users.id
+      LEFT JOIN (
+          SELECT
+              post,
+              COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
+          FROM vote
+          GROUP BY post
+      ) AS vote_reputation ON post.id = vote_reputation.post
+      LEFT JOIN (
+          SELECT
+              post.id,
+              array_agg(DISTINCT name) AS media
+          FROM media
+          JOIN post ON post.id = media.post
+          GROUP BY post.id
+      ) AS media_names ON post.id = media_names.id
+      LEFT JOIN (
+          SELECT
+              thread,
+              COUNT(id) AS threads
+          FROM post
+          GROUP BY thread
+      ) AS thread_ids ON post.id = thread_ids.thread
+      LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
+      WHERE post.thread = $1
+      ORDER BY ${sortBy} ${sortDir};
     `;
     const { rows } = await client.query(query, [postId]);
-    return rows[0].array_agg;
+    return rows;
   }
 }

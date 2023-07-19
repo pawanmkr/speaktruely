@@ -91,8 +91,8 @@ router.post("/post/comment", authorization, PostController.addCommentInPost);
 // get comments for particular post
 router.get("/post/comments", authorization, PostController.getCommentsForPost);
 
-// get all thread ids by post
-router.get("/post/threads/:postId", authorization, PostController.getThreadIds);
+// get all threads for specific post
+router.get("/post/threads", authorization, PostController.getThreadsForPost);
 
 // get thread by id
 router.get("/post/:threadId", authorization, PostController.getThreadsById);
