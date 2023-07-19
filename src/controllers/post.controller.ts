@@ -1,6 +1,12 @@
 import { QueryResultRow } from "pg";
 import { Response, Request, NextFunction } from "express";
-import { Post, PostNotFoundError, Vote, Media } from "../models/index.js";
+import {
+  Post,
+  PostNotFoundError,
+  Vote,
+  Media,
+  Comment,
+} from "../models/index.js";
 import { uploadMedia } from "../lib/services/azureStorage.js";
 import { ExtendedRequest } from "../middlewares/index.js";
 
@@ -18,7 +24,12 @@ export class PostController {
     try {
       const tieThreadWithPostId = req.body.thread;
       const { content } = req.body;
-      const username = req.username;
+      const userId = req.userid;
+
+      if (!userId) {
+        return res.status(404).send("userId not found");
+      }
+      console.log(content, userId, tieThreadWithPostId);
 
       const fileUploadPromises = [];
       for (const fileKey of Object.keys(req.files)) {
@@ -35,12 +46,11 @@ export class PostController {
             .status(501)
             .send("Error: Threads can only be created with original post");
         }
-        await Post.updatePostThreadState(tieThreadWithPostId);
       }
       const post: QueryResultRow = await Post.addPost(
-        tieThreadWithPostId,
         content,
-        username
+        userId,
+        tieThreadWithPostId
       );
       if (!post) {
         return res.status(404).send("Failed to create the post");
@@ -109,18 +119,13 @@ export class PostController {
   ) {
     try {
       const { postId, type }: VoteBody = req.body;
-      const { username } = req;
-      if (
-        username === undefined ||
-        postId === undefined ||
-        type === undefined
-      ) {
-        res.status(500).send("postId, type or username not found");
+      const { userid } = req;
+      if (userid === undefined || postId === undefined || type === undefined) {
+        res.status(500).send("postId, type or userid not found");
       }
-      const vote = await Vote.insertVote(postId, username, type);
+      const vote = await Vote.insertVote(postId, userid, type);
       if (!vote) {
-        res.status(404);
-        return;
+        return res.status(404);
       }
       res.status(201).send(vote);
     } catch (error) {
@@ -135,17 +140,16 @@ export class PostController {
     next: NextFunction
   ) {
     try {
-      const { username } = req;
-      if (username === undefined) {
-        res.status(500).send("No username found");
+      const { userid } = req;
+      if (userid === undefined) {
+        res.status(500).send("No userid found");
       }
-      const postId = parseInt(req.query.postId as string);
-      const vote = await Vote.getVote(postId, username);
+      const postId = parseInt(req.query.post_id as string);
+      const vote = await Vote.getVote(postId, userid);
       if (!vote) {
-        res.status(200).json({ type: "NEUTRAL" });
-        return;
+        return res.status(204).json({ type: "NEUTRAL" });
       }
-      res.status(200).json({ type: vote.type });
+      res.status(200).json({ type: vote.vote_type });
     } catch (error) {
       console.error("Failed to find State:", error);
       next(error);
@@ -174,6 +178,44 @@ export class PostController {
       res.status(200).send(ids);
     } catch (error) {
       console.error("Failed to retreive thread ids:", error);
+      next(error);
+    }
+  }
+
+  static async addCommentInPost(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { comment, post_id } = req.body;
+      const userId: number = req.userid;
+      console.log(comment, post_id, userId);
+      const result: QueryResultRow = await Comment.addComment(
+        comment,
+        post_id,
+        userId
+      );
+      res.status(201).send(result);
+    } catch (error) {
+      console.error("Failed to post comment:", error);
+      next(error);
+    }
+  }
+
+  static async getCommentsForPost(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const postId = parseInt(req.query.post_id as string);
+      const comments: QueryResultRow = await Comment.getAllCommentsForPost(
+        postId
+      );
+      res.status(200).send(comments);
+    } catch (error) {
+      console.error("Failed to retreive comments: ", error);
       next(error);
     }
   }

@@ -25,10 +25,15 @@ app.use((req: Request, res: Response, next) => {
 app.use(
   cors({
     origin: "*",
-    optionsSuccessStatus: 200,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 204,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Access-Control-Allow-Origin",
+    ],
     exposedHeaders: ["Content-Range", "X-Content-Range"],
     methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
 

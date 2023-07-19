@@ -15,10 +15,9 @@ export class Post {
         id SERIAL PRIMARY KEY,
         thread INTEGER DEFAULT NULL,
         content VARCHAR(500),
-        created_by VARCHAR(255),
-        has_threads BOOLEAN DEFAULT FALSE,
+        user_id INTEGER,
         created_at TIMESTAMP DEFAULT NOW(),
-        CONSTRAINT fk_created_by FOREIGN KEY (created_by) REFERENCES users (username) ON DELETE CASCADE
+        CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       );
     `;
     try {
@@ -29,15 +28,15 @@ export class Post {
   }
 
   static async addPost(
-    thread: number,
     content: string,
-    created_by: string
+    userId: number,
+    thread?: number
   ): Promise<QueryResultRow | undefined> {
     try {
-      if (!content || !created_by) {
-        throw new Error("Content and created_by fields are required.");
+      if (!content || !userId) {
+        throw new Error("Content and userId fields are required.");
       }
-      const post = await Post.insertPost(thread, content, created_by);
+      const post = await Post.insertPost(content, userId, thread);
       return post;
     } catch (error) {
       console.error("Error adding post:", error);
@@ -60,16 +59,26 @@ export class Post {
   }
 
   static async insertPost(
-    thread: number,
     content: string,
-    created_by: string
+    userId: number,
+    thread?: number
   ): Promise<QueryResultRow> {
-    const query = `
-      INSERT INTO post (thread, content, created_by)
-      VALUES ($1, $2, $3)
-      RETURNING *;
-    `;
-    const values = [thread, content, created_by];
+    let query: string, values: (string | number)[];
+    if (thread) {
+      query = `
+        INSERT INTO post (user_id, thread, content)
+        VALUES ($1, $2, $3)
+        RETURNING *;
+      `;
+      values = [userId, thread, content];
+    } else {
+      query = `
+        INSERT INTO post (user_id, content)
+        VALUES ($1, $2)
+        RETURNING *;
+      `;
+      values = [userId, content];
+    }
 
     const { rows } = await client.query(query, values);
     return rows[0];
@@ -111,19 +120,19 @@ export class Post {
             post.id,
             post.thread,
             post.content,
+            users.id AS user_id,
             users.full_name,
             users.username,
-            post.has_threads,
             post.created_at,
             vote_reputation.reputation,
             media_names.media,
             thread_ids.threads
         FROM post
-        LEFT JOIN users ON post.created_by = users.username
+        LEFT JOIN users ON post.user_id = users.id
         LEFT JOIN (
             SELECT
                 post,
-                COUNT(CASE WHEN type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN type = 'DOWNVOTE' THEN 1 END) AS reputation
+                COUNT(CASE WHEN vote_type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN vote_type = 'DOWNVOTE' THEN 1 END) AS reputation
             FROM vote
             GROUP BY post
         ) AS vote_reputation ON post.id = vote_reputation.post
@@ -142,7 +151,7 @@ export class Post {
             FROM post
             GROUP BY thread
         ) AS thread_ids ON post.id = thread_ids.thread
-        LEFT JOIN vote ON post.id = vote.post AND post.created_by = vote._user
+        LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
         ORDER BY ${sortBy} ${sortDir}
         LIMIT $1
         OFFSET $2;
@@ -159,19 +168,19 @@ export class Post {
             post.id,
             post.thread,
             post.content,
+            users.id AS user_id,
             users.full_name,
             users.username,
-            post.has_threads,
             post.created_at,
             vote_reputation.reputation,
             media_names.media,
             thread_ids.threads
         FROM post
-        LEFT JOIN users ON post.created_by = users.username
+        LEFT JOIN users ON post.user_id = users.id
         LEFT JOIN (
             SELECT
                 post,
-                COUNT(CASE WHEN type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN type = 'DOWNVOTE' THEN 1 END) AS reputation
+                COUNT(CASE WHEN vote_type = 'UPVOTE' THEN 1 END) - COUNT(CASE WHEN vote_type = 'DOWNVOTE' THEN 1 END) AS reputation
             FROM vote
             GROUP BY post
         ) AS vote_reputation ON post.id = vote_reputation.post
@@ -190,7 +199,7 @@ export class Post {
             FROM post
             GROUP BY thread
         ) AS thread_ids ON post.id = thread_ids.thread
-        LEFT JOIN vote ON post.id = vote.post AND post.created_by = vote._user
+        LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
         WHERE post.id = $1;
     `;
     const values = [postId];
@@ -204,13 +213,6 @@ export class Post {
     `;
     const { rows } = await client.query(query, [tieThreadWithPostId]);
     return rows[0];
-  }
-
-  static async updatePostThreadState(tieThreadWithPostId: number) {
-    const query = `
-      UPDATE post SET has_threads = TRUE WHERE id=$1;
-    `;
-    await client.query(query, [tieThreadWithPostId]);
   }
 
   static async getThreadIdsByPost(postId: number) {
