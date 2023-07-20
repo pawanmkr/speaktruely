@@ -20,11 +20,11 @@ if (JWT_SECRET_KEY === undefined) {
  */
 export class UserController {
   static async registerNewUser(req: Request, res: Response) {
-    if (!req.body.fullName || !req.body.email || !req.body.password) {
+    if (!req.body.fullname || !req.body.email || !req.body.password) {
       res.status(404).send("Fill all required fields");
       return;
     }
-    const { fullName, email, password } = req.body;
+    const { fullname, email, password } = req.body;
     const hashedPassword: string = crypto
       .createHash("sha256")
       .update(password)
@@ -37,7 +37,7 @@ export class UserController {
     }
     const username: string = faker.internet.userName().toLowerCase();
     const registeredUser = await User.addNewUserToDB(
-      fullName,
+      fullname,
       username,
       email,
       hashedPassword
@@ -58,18 +58,18 @@ export class UserController {
   }
 
   static async login(req: Request, res: Response) {
-    if (!req.body.username || !req.body.password) {
+    if (!req.body.email_or_username || !req.body.password) {
       res.status(404).send("Fill all required fields");
       return;
     }
-    const { username, password } = req.body;
+    const { email_or_username, password } = req.body;
     const hashedPassword: string = crypto
       .createHash("sha256")
       .update(password)
       .digest("hex");
 
     const existingUser: QueryResultRow = await User.doesUserAlreadyExists(
-      username
+      email_or_username
     );
     if (!existingUser) {
       res.status(404).send("User does not exists");

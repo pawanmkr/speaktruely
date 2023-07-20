@@ -31,12 +31,15 @@ export class User {
   }
 
   static async doesUserAlreadyExists(
-    username: string
+    email_or_username: string
   ): Promise<QueryResultRow> {
-    const existingUser = await client.query(
-      `SELECT * FROM users WHERE username = $1`,
-      [username]
-    );
+    let query: string;
+    if (email_or_username.includes("@")) {
+      query = `SELECT * FROM users WHERE email = $1`;
+    } else {
+      query = `SELECT * FROM users WHERE username = $1`;
+    }
+    const existingUser = await client.query(query, [email_or_username]);
     return existingUser.rows[0];
   }
 

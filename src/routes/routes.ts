@@ -10,21 +10,6 @@ const VoteType = [0, 1, -1];
 router.post("/user/register", UserController.registerNewUser);
 router.post("/user/login", UserController.login);
 
-router.post(
-  "/user/fullname",
-  authorization,
-  (req: Request, res: Response, next: NextFunction) => {
-    body("username")
-      .notEmpty()
-      .withMessage("username is required to get the fullName");
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    PostController.getPosts(req, res, next);
-  }
-);
-
 const createNewPostValidationChain = [
   body("content")
     .optional()
@@ -53,7 +38,7 @@ router.post(
 );
 
 // get all posts for home feed
-router.get("/post", authorization, PostController.getPosts);
+router.get("/post", PostController.getPosts);
 
 const votingBodyValidationChain = [
   body("postId").notEmpty().withMessage("postId is Required!"),
@@ -89,10 +74,10 @@ router.get("/post/vote/state", authorization, PostController.checkVoteState);
 router.post("/post/comment", authorization, PostController.addCommentInPost);
 
 // get comments for particular post
-router.get("/post/comments", authorization, PostController.getCommentsForPost);
+router.get("/post/comments", PostController.getCommentsForPost);
 
 // get all threads for specific post
-router.get("/post/threads", authorization, PostController.getThreadsForPost);
+router.get("/post/threads", PostController.getThreadsForPost);
 
 // get thread by id
-router.get("/post/:threadId", authorization, PostController.getThreadsById);
+router.get("/post/:threadId", PostController.getThreadsById);
