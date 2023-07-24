@@ -33,7 +33,12 @@ export async function uploadMedia(file) {
   const blockBlobClient = containerClient.getBlockBlobClient(file.filename);
 
   const fileData = fs.readFileSync(file.path);
-  await blockBlobClient.uploadData(fileData);
+  await blockBlobClient.uploadData(fileData, {
+    onProgress: (progress) => {
+      const percent: number = (progress.loadedBytes / file.size) * 100;
+      console.log(percent);
+    },
+  });
   const blob = {
     url: blockBlobClient.url,
     name: file.filename,
