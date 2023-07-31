@@ -125,7 +125,7 @@ export class Post {
             users.username,
             post.created_at,
             vote_reputation.reputation,
-            media_names.media,
+            media.media,
             thread_ids.threads
         FROM post
         LEFT JOIN users ON post.user_id = users.id
@@ -139,11 +139,11 @@ export class Post {
         LEFT JOIN (
             SELECT
                 post.id,
-                array_agg(DISTINCT name) AS media
+                json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
             FROM media
             JOIN post ON post.id = media.post
             GROUP BY post.id
-        ) AS media_names ON post.id = media_names.id
+        ) AS media ON post.id = media.id
         LEFT JOIN (
             SELECT
                 thread,
@@ -173,7 +173,7 @@ export class Post {
             users.username,
             post.created_at,
             vote_reputation.reputation,
-            media_names.media,
+            media.media,
             thread_ids.threads
         FROM post
         LEFT JOIN users ON post.user_id = users.id
@@ -187,11 +187,11 @@ export class Post {
         LEFT JOIN (
             SELECT
                 post.id,
-                array_agg(DISTINCT name) AS media
+                json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
             FROM media
             JOIN post ON post.id = media.post
             GROUP BY post.id
-        ) AS media_names ON post.id = media_names.id
+        ) AS media ON post.id = media.id
         LEFT JOIN (
             SELECT
                 thread,
@@ -230,7 +230,8 @@ export class Post {
           users.username,
           post.created_at,
           vote_reputation.reputation,
-          media_names.media
+          media.media,
+          thread_ids.threads
       FROM post
       LEFT JOIN users ON post.user_id = users.id
       LEFT JOIN (
@@ -243,11 +244,11 @@ export class Post {
       LEFT JOIN (
           SELECT
               post.id,
-              array_agg(DISTINCT name) AS media
+              json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
           FROM media
           JOIN post ON post.id = media.post
           GROUP BY post.id
-      ) AS media_names ON post.id = media_names.id
+      ) AS media ON post.id = media.id
       LEFT JOIN (
           SELECT
               thread,

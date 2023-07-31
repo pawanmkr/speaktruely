@@ -10,6 +10,7 @@ export class Media {
           name TEXT,
           post INTEGER NOT NULL,
           url TEXT,
+          mimetype TEXT,
 
           CONSTRAINT fk_post FOREIGN KEY (post) REFERENCES post (id) ON DELETE CASCADE
         );
@@ -24,14 +25,15 @@ export class Media {
   static async insertPost(
     name: string,
     postId: number,
-    url: string
+    url: string,
+    mimetype: string
   ): Promise<QueryResultRow> {
     try {
       const { rows } = await client.query(
         `
-        INSERT INTO media (name, post, url) VALUES($1, $2, $3) RETURNING *;
+        INSERT INTO media (name, post, url, mimetype) VALUES($1, $2, $3, $4) RETURNING *;
       `,
-        [name, postId, url]
+        [name, postId, url, mimetype]
       );
       return rows[0];
     } catch (error) {

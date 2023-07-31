@@ -52,7 +52,9 @@ export class PostController {
       }
       const saveUrlPromises = [];
       for (const blob of blobs) {
-        saveUrlPromises.push(Media.insertPost(blob.name, post.id, blob.url));
+        saveUrlPromises.push(
+          Media.insertPost(blob.name, post.id, blob.url, blob.mimetype)
+        );
       }
       await Promise.all(saveUrlPromises);
       const newPost: QueryResultRow = await Post.getFullPostById(post.id);
@@ -194,7 +196,6 @@ export class PostController {
     try {
       const { comment, post_id } = req.body;
       const userId: number = req.userid;
-      console.log(comment, post_id, userId);
       const result: QueryResultRow = await Comment.addComment(
         comment,
         post_id,

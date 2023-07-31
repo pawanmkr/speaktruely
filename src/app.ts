@@ -2,15 +2,18 @@ import dotenv from "dotenv";
 dotenv.config();
 import express, { Express, NextFunction, Request, Response } from "express";
 import cors from "cors";
+import http from "http";
 import { router } from "./routes/routes.js";
 import client from "./config/db.js";
 import { PoolClient } from "pg";
 import { Tables } from "./controllers/createTables.js";
 import morgan from "morgan";
 import { errorMiddleware } from "./middlewares/index.js";
+import { WebSocketServer } from "ws";
 
 const app: Express = express();
 const port: string | number = process.env.PORT || 8080;
+const server = http.createServer(app);
 
 /* Middlewares */
 app.use(morgan("dev"));
@@ -72,7 +75,7 @@ app.get("/health", (req: Request, res: Response) => {
 app.use("/v1", router);
 
 function startServer() {
-  app.listen(port, () => {
+  server.listen(port, () => {
     let url: string = `http://localhost:${port}`;
     if (process.env.NODE_ENV === "production") {
       url = "https://xserver.onrender.com";
@@ -80,3 +83,5 @@ function startServer() {
     console.log(`Server is running at ${url}\n`);
   });
 }
+
+export const ws = new WebSocketServer({ server });
