@@ -53,7 +53,7 @@ jobs:
       - name: Unzip artifact
         uses: montudor/action-zip@v1
         with:
-          args: unzip -qq dist.zip -d dist
+          args: unzip -qq dist.zip -d .
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
@@ -62,4 +62,4 @@ jobs:
           app-name: "xs" # Replace with your actual Azure Web App name
           slot-name: "Production" # Replace with your actual Azure Web App slot name
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C8DAA58397954B0198E217505BAE202B }}
-          package: dist
+          package: .
