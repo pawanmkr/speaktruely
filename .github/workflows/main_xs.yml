@@ -21,13 +21,10 @@ jobs:
         with:
           node-version: "18.x"
 
-      - name: Install pnpm and dependencies
+      - name: Install pnpm, dependencies and build
         run: |
           npm install -g pnpm
-          pnpm install
-
-      - name: Build TypeScript code
-        run: pnpm run build
+          pnpm run prod:build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
