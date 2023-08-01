@@ -113,6 +113,33 @@ export class PostController {
     }
   }
 
+  static async getProfilePosts(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sortBy = "created_at",
+        sortDir = "desc",
+      } = req.query;
+      const userId = parseInt(req.query.user_id as string);
+      const posts = await Post.getPostsByUserId(
+        userId,
+        parseInt(page.toString(), 10),
+        parseInt(limit.toString(), 10),
+        sortBy.toString(),
+        sortDir.toString()
+      );
+      res.json(posts);
+    } catch (error) {
+      console.error("Error getting posts:", error);
+      next(error);
+    }
+  }
+
   static async handleVoting(
     req: ExtendedRequest,
     res: Response,

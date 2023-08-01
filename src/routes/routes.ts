@@ -43,6 +43,9 @@ router.post(
 // get all posts for home feed
 router.get("/post", PostController.getPosts);
 
+// get all posts for user profile
+router.get("/profile/post", PostController.getProfilePosts);
+
 const votingBodyValidationChain = [
   body("postId").notEmpty().withMessage("postId is Required!"),
   body("type")
@@ -90,3 +93,13 @@ router.delete("/post", authorization, PostController.deletePost);
 
 // get suggestions to follow
 router.get("/suggestions/follow", authorization, UserController.getSuggestions);
+
+// fetch profile details
+router.get("/profile", UserController.getProfileByUsername);
+
+// check if following the user
+router.get(
+  "/user/follow/state",
+  authorization,
+  UserController.checkIfFollowingTheUser
+);

@@ -8,6 +8,45 @@ export class PostNotFoundError extends Error {
   }
 }
 
+const completePostQuery = `
+    SELECT
+    post.id,
+    post.thread,
+    post.content,
+    users.id AS user_id,
+    users.full_name,
+    users.username,
+    post.created_at,
+    vote_reputation.reputation,
+    media.media,
+    thread_ids.threads
+    FROM post
+    LEFT JOIN users ON post.user_id = users.id
+    LEFT JOIN (
+    SELECT
+        post,
+        COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
+    FROM vote
+    GROUP BY post
+    ) AS vote_reputation ON post.id = vote_reputation.post
+    LEFT JOIN (
+    SELECT
+        post.id,
+        json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
+    FROM media
+    JOIN post ON post.id = media.post
+    GROUP BY post.id
+    ) AS media ON post.id = media.id
+    LEFT JOIN (
+    SELECT
+        thread,
+        COUNT(id) AS threads
+    FROM post
+    GROUP BY thread
+    ) AS thread_ids ON post.id = thread_ids.thread
+    LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
+`;
+
 export class Post {
   static async createPostTable(): Promise<void> {
     const query = `
@@ -101,42 +140,7 @@ export class Post {
   ): Promise<QueryResultRow[]> {
     const offset = (page - 1) * limit;
     const query = `
-        SELECT
-            post.id,
-            post.thread,
-            post.content,
-            users.id AS user_id,
-            users.full_name,
-            users.username,
-            post.created_at,
-            vote_reputation.reputation,
-            media.media,
-            thread_ids.threads
-        FROM post
-        LEFT JOIN users ON post.user_id = users.id
-        LEFT JOIN (
-            SELECT
-                post,
-                COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
-            FROM vote
-            GROUP BY post
-        ) AS vote_reputation ON post.id = vote_reputation.post
-        LEFT JOIN (
-            SELECT
-                post.id,
-                json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
-            FROM media
-            JOIN post ON post.id = media.post
-            GROUP BY post.id
-        ) AS media ON post.id = media.id
-        LEFT JOIN (
-            SELECT
-                thread,
-                COUNT(id) AS threads
-            FROM post
-            GROUP BY thread
-        ) AS thread_ids ON post.id = thread_ids.thread
-        LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
+        ${completePostQuery}
         ORDER BY ${sortBy} ${sortDir}
         LIMIT $1
         OFFSET $2;
@@ -147,45 +151,31 @@ export class Post {
     return rows;
   }
 
+  static async getPostsByUserId(
+    userId: number,
+    page: number,
+    limit: number,
+    sortBy: string,
+    sortDir: string
+  ): Promise<QueryResultRow[]> {
+    const offset = (page - 1) * limit;
+    const query = `
+    ${completePostQuery}
+        WHERE users.id = $1
+        ORDER BY ${sortBy} ${sortDir}
+        LIMIT $2
+        OFFSET $3;
+    `;
+    const values = [userId, limit, offset];
+
+    const { rows } = await client.query(query, values);
+    return rows;
+  }
+
   static async getFullPostById(postId: number): Promise<QueryResultRow> {
     const query = `
-        SELECT
-            post.id,
-            post.thread,
-            post.content,
-            users.id AS user_id,
-            users.full_name,
-            users.username,
-            post.created_at,
-            vote_reputation.reputation,
-            media.media,
-            thread_ids.threads
-        FROM post
-        LEFT JOIN users ON post.user_id = users.id
-        LEFT JOIN (
-            SELECT
-                post,
-                COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
-            FROM vote
-            GROUP BY post
-        ) AS vote_reputation ON post.id = vote_reputation.post
-        LEFT JOIN (
-            SELECT
-                post.id,
-                json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
-            FROM media
-            JOIN post ON post.id = media.post
-            GROUP BY post.id
-        ) AS media ON post.id = media.id
-        LEFT JOIN (
-            SELECT
-                thread,
-                COUNT(id) AS threads
-            FROM post
-            GROUP BY thread
-        ) AS thread_ids ON post.id = thread_ids.thread
-        LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
-        WHERE post.id = $1;
+      ${completePostQuery}
+      WHERE post.id = $1;
     `;
     const values = [postId];
     const { rows } = await client.query(query, values);
@@ -206,42 +196,7 @@ export class Post {
     sortDir: string
   ) {
     const query = `
-      SELECT
-          post.id,
-          post.thread,
-          post.content,
-          users.id AS user_id,
-          users.full_name,
-          users.username,
-          post.created_at,
-          vote_reputation.reputation,
-          media.media,
-          thread_ids.threads
-      FROM post
-      LEFT JOIN users ON post.user_id = users.id
-      LEFT JOIN (
-          SELECT
-              post,
-              COUNT(CASE WHEN vote_type = 1 THEN 1 END) - COUNT(CASE WHEN vote_type = -1 THEN 1 END) AS reputation
-          FROM vote
-          GROUP BY post
-      ) AS vote_reputation ON post.id = vote_reputation.post
-      LEFT JOIN (
-          SELECT
-              post.id,
-              json_agg(jsonb_build_object('name', media.name, 'mimetype', media.mimetype)) AS media
-          FROM media
-          JOIN post ON post.id = media.post
-          GROUP BY post.id
-      ) AS media ON post.id = media.id
-      LEFT JOIN (
-          SELECT
-              thread,
-              COUNT(id) AS threads
-          FROM post
-          GROUP BY thread
-      ) AS thread_ids ON post.id = thread_ids.thread
-      LEFT JOIN vote ON post.id = vote.post AND post.user_id = vote.user_id
+    ${completePostQuery}
       WHERE post.thread = $1
       ORDER BY ${sortBy} ${sortDir};
     `;

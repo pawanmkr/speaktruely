@@ -37,7 +37,11 @@ export class UserController {
       res.status(409).send("Email Already Exists");
       return;
     }
-    const username: string = faker.internet.userName().toLowerCase();
+    const pattern = /^[a-z0-9_-]*$/;
+    let username: string = faker.internet.userName().toLowerCase();
+    while (!pattern.test(username)) {
+      username = faker.internet.userName().toLowerCase();
+    }
     const registeredUser = await User.addNewUserToDB(
       fullname,
       username,
@@ -130,6 +134,50 @@ export class UserController {
       const followerId = req.userid;
       await Follow.unfollowUser(followerId, followingId);
       res.sendStatus(200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getProfileByUsername(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const username = req.query.username as string;
+      const user: QueryResultRow = await User.getUserByUsername(username);
+      if (user) {
+        return res.send(user);
+      } else {
+        res.status(404).send("User does not exists");
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async checkIfFollowingTheUser(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const targetUserId = parseInt(req.query.user_id as string);
+      const userId = req.userid;
+      const result: boolean = await User.checkIfFollowingTargetUser(
+        targetUserId,
+        userId
+      );
+      if (result) {
+        return res.json({
+          following: true,
+        });
+      } else {
+        res.json({
+          following: false,
+        });
+      }
     } catch (error) {
       next(error);
     }

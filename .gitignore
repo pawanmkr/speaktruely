@@ -9,3 +9,5 @@ dist/
 queries.sql
 todo
 tmp/
+.deployment
+.vscode

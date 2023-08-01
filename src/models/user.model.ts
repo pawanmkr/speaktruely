@@ -91,4 +91,41 @@ export class User {
     const res = await client.query(query, [userId]);
     return res.rows;
   }
+
+  static async getUserByUsername(username: string): Promise<QueryResultRow[]> {
+    const query = `
+        SELECT 
+            u.id,
+            u.full_name,
+            u.username,
+            COALESCE(f.followers_count, 0) AS followers_count,
+            COALESCE(f2.following_count, 0) AS following_count
+        FROM users u
+        LEFT JOIN (
+            SELECT following_id, COUNT(follower_id) AS followers_count
+            FROM follows
+            GROUP BY following_id
+        ) f ON u.id = f.following_id
+        LEFT JOIN (
+            SELECT follower_id, COUNT(following_id) AS following_count
+            FROM follows
+            GROUP BY follower_id
+        ) f2 ON u.id = f2.follower_id
+        WHERE u.username = $1;
+    `;
+    const res = await client.query(query, [username]);
+    return res.rows[0];
+  }
+
+  static async checkIfFollowingTargetUser(
+    targetId: number,
+    userId: number
+  ): Promise<boolean> {
+    const query = `
+      SELECT * FROM follows
+      WHERE following_id = $1 AND follower_id = $2;
+    `;
+    const { rows } = await client.query(query, [targetId, userId]);
+    return rows.length > 0 ? true : false;
+  }
 }
