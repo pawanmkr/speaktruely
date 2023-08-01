@@ -65,19 +65,23 @@ export class PostController {
     }
   }
 
-  static async deletePost(req: Request, res: Response, next: NextFunction) {
+  static async deletePost(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const postId = parseInt(req.params.id, 10);
+      const postId = parseInt(req.query.post_id as string);
       if (isNaN(postId)) {
         return res.status(400).send("Invalid post ID.");
       }
-      // const { username } = req.body;
-      /*
-       * First, Verify that the post belongs to user
-       */
-
-      await Post.deletePost(postId);
-      res.sendStatus(204);
+      const userId = req.userid;
+      const post: QueryResultRow = await Post.getPostById(postId);
+      if (post && post.user_id === userId) {
+        await Post.removePost(postId);
+        return res.sendStatus(200);
+      }
+      res.status(204).end();
     } catch (error) {
       console.error("Error deleting post:", error);
       if (error instanceof PostNotFoundError) {

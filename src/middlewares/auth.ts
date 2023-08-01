@@ -21,10 +21,9 @@ export async function authorization(
   res: Response,
   next: NextFunction
 ) {
-  const authHeader: string = req.headers.authorization || "";
-  const token: string = (authHeader && authHeader.split(" ")[1]) || "";
-
-  if (token) {
+  if (req.headers.authorization) {
+    const authHeader: string = req.headers.authorization;
+    const token: string = authHeader && authHeader.split(" ")[1];
     jwt.verify(token, jwtSecret, (err: JsonWebTokenError, user: JwtPayload) => {
       if (err) {
         console.error(err);
@@ -34,6 +33,7 @@ export async function authorization(
       next();
     });
   } else {
+    // when client hasn't provided Authorization header
     res.status(401).send("Authorization Token is Missing");
   }
 }

@@ -76,4 +76,19 @@ export class User {
       return null;
     }
   }
+
+  static async getUsersForSuggestion(
+    userId: number
+  ): Promise<QueryResultRow[] | undefined> {
+    const query = `
+      SELECT id, full_name, username
+      FROM users 
+      WHERE id NOT IN ($1) AND id NOT IN (
+        SELECT following_id FROM follows WHERE follower_id = $1
+      )
+      LIMIT 5;
+    `;
+    const res = await client.query(query, [userId]);
+    return res.rows;
+  }
 }

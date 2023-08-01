@@ -1,3 +1,4 @@
+import { Follow } from "../models/follow.model.js";
 import { Comment, Post, User, Vote, Media } from "../models/index.js";
 
 export class Tables {
@@ -8,6 +9,7 @@ export class Tables {
       await Vote.createVoteTable();
       await Comment.createCommentTable();
       await Media.createMediaTable();
+      await Follow.createFollowsTable();
     } catch (error) {
       console.log(error);
       throw new Error("Failed to create tables");

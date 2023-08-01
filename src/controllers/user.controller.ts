@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { User } from "../models/user.model.js";
 import dotenv from "dotenv";
 import path from "path";
@@ -6,6 +6,8 @@ import jwt, { Secret, JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
 import { faker } from "@faker-js/faker";
 import { QueryResultRow } from "pg";
+import { ExtendedRequest } from "../middlewares/index.js";
+import { Follow } from "../models/follow.model.js";
 
 dotenv.config({
   path: path.join(process.cwd(), ".env"),
@@ -52,7 +54,6 @@ export class UserController {
       email: registeredUser.email,
       username: registeredUser.username,
     };
-    console.log(payload);
     const token = jwt.sign(payload, JWT_SECRET_KEY);
     res.status(201).send(token);
   }
@@ -87,5 +88,50 @@ export class UserController {
     };
     const token: string = jwt.sign(payload, JWT_SECRET_KEY);
     res.status(201).send(token);
+  }
+
+  static async getSuggestions(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = parseInt(req.query.user_id as string);
+      const users: QueryResultRow[] | undefined =
+        await User.getUsersForSuggestion(userId);
+      if (users.length > 0) return res.json(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async followUser(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const followingId = req.body.following_id;
+      const followerId = req.userid;
+      await Follow.followUser(followerId, followingId);
+      res.sendStatus(201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async unfollowUser(
+    req: ExtendedRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const followingId = req.body.following_id;
+      const followerId = req.userid;
+      await Follow.unfollowUser(followerId, followingId);
+      res.sendStatus(200);
+    } catch (error) {
+      next(error);
+    }
   }
 }

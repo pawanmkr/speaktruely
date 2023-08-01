@@ -44,20 +44,6 @@ export class Post {
     }
   }
 
-  static async deletePost(postId: number): Promise<void> {
-    try {
-      if (!postId) {
-        throw new Error("Post ID is required.");
-      }
-
-      await Post.getPostById(postId);
-      await Post.removePost(postId);
-      console.log(`Post with ID ${postId} deleted successfully.`);
-    } catch (error) {
-      console.error("Error deleting post:", error);
-    }
-  }
-
   static async insertPost(
     content: string,
     userId: number,
@@ -84,14 +70,13 @@ export class Post {
     return rows[0];
   }
 
-  static async removePost(postId: number): Promise<void> {
+  static async removePost(postId: number): Promise<QueryResultRow> {
     const query = `
       DELETE FROM post
-      WHERE id = $1;
+      WHERE id = $1 RETURNING *;
     `;
-    const values = [postId];
-
-    await client.query(query, values);
+    const res = await client.query(query, [postId]);
+    return res.rows[0];
   }
 
   static async getPostById(postId: number): Promise<QueryResultRow> {

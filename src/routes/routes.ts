@@ -10,6 +10,9 @@ const VoteType = [0, 1, -1];
 router.post("/user/register", UserController.registerNewUser);
 router.post("/user/login", UserController.login);
 
+router.post("/user/follow", authorization, UserController.followUser);
+router.post("/user/unfollow", authorization, UserController.unfollowUser);
+
 const createNewPostValidationChain = [
   body("content")
     .optional()
@@ -81,3 +84,9 @@ router.get("/post/threads", PostController.getThreadsForPost);
 
 // get thread by id
 router.get("/post/:threadId", PostController.getThreadsById);
+
+// delete post by id
+router.delete("/post", authorization, PostController.deletePost);
+
+// get suggestions to follow
+router.get("/suggestions/follow", authorization, UserController.getSuggestions);
