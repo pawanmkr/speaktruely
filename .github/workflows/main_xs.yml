@@ -48,10 +48,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: node-app
-          path: dist.zip # Ensure the path matches the artifact name in the 'build' job
+          path: dist.zip
 
       - name: Unzip artifact
-        run: unzip -o dist.zip -d node-app/dist/
+        run: unzip -o ${{ github.workspace }}/dist.zip -d ${{ github.workspace }}/node-app/dist/
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
@@ -60,4 +60,4 @@ jobs:
           app-name: "xs" # Replace with your actual Azure Web App name
           slot-name: "Production" # Replace with your actual Azure Web App slot name
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C8DAA58397954B0198E217505BAE202B }}
-          package: node-app/dist/
+          package: ${{ github.workspace }}/node-app/dist/
