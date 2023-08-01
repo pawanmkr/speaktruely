@@ -26,11 +26,10 @@ jobs:
           npm install -g pnpm
           pnpm run prod:build
 
-      # Step to create a zip archive of the 'dist/' folder
       - name: Create dist.zip
-        - uses: montudor/action-zip@v1
-          with:
-            args: zip -qq -r dist.zip dist
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r dist.zip dist
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
@@ -52,9 +51,9 @@ jobs:
           name: node-app
 
       - name: Unzip artifact
-        - uses: montudor/action-zip@v1
-          with:
-            args: unzip -qq dist.zip -d dist
+        uses: montudor/action-zip@v1
+        with:
+          args: unzip -qq dist.zip -d dist
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
