@@ -26,11 +26,15 @@ jobs:
           npm install -g pnpm
           pnpm run prod:build
 
+      # Step to create a zip archive of the 'dist/' folder
+      - name: Create dist.zip
+        run: zip -r dist.zip dist/
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: node-app
-          path: .
+          path: dist.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -45,6 +49,10 @@ jobs:
         with:
           name: node-app
 
+      # Add a step to unzip the artifact
+      - name: Unzip artifact
+        run: unzip -o node-app/dist.zip -d node-app/dist/
+
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
@@ -52,4 +60,4 @@ jobs:
           app-name: "xs" # Replace with your actual Azure Web App name
           slot-name: "Production" # Replace with your actual Azure Web App slot name
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C8DAA58397954B0198E217505BAE202B }}
-          package: .
+          package: node-app/dist/
