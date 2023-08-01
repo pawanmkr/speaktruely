@@ -48,10 +48,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: node-app
+          path: dist.zip # Ensure the path matches the artifact name in the 'build' job
 
-      # Add a step to unzip the artifact
       - name: Unzip artifact
-        run: unzip -o node-app/dist.zip -d node-app/dist/
+        run: unzip -o dist.zip -d node-app/dist/
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
