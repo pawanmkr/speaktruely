@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v1
         with:
-          node-version: "14.x" # Use Node.js 14.x, or the version compatible with your app
+          node-version: "18.x"
 
       - name: Install pnpm and dependencies
         run: |
