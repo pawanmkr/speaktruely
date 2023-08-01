@@ -19,7 +19,7 @@
     "prod": "node dist/app.js",
     "watch": "tsc --watch",
     "dev:start": "docker compose up -d && pnpm install && pnpm run dev",
-    "prod:start": "pnpm install && pnpm run build && pnpm run prod"
+    "prod:build": "pnpm clean && pnpm run build"
   },
   "dependencies": {
     "@azure/identity": "^3.2.3",
