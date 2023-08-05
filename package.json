@@ -8,6 +8,9 @@
     "web-service",
     "api"
   ],
+    "engines": {
+      "node": "16.x"
+    },
   "author": "Pawan Kumar",
   "license": "MIT",
   "scripts": {
@@ -19,7 +22,9 @@
     "prod": "node dist/app.js",
     "watch": "tsc --watch",
     "dev:start": "docker compose up -d && pnpm install && pnpm run dev",
-    "prod:build": "pnpm clean && pnpm run build"
+    "prod:build": "pnpm clean && pnpm run build",
+    "install:pnpm": "npm install -g pnpm",
+    "build:digitalocean": "npm install:pnpm && pnpm build && pnpm prod"
   },
   "dependencies": {
     "@azure/identity": "^3.2.3",
