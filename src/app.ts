@@ -11,10 +11,18 @@ import morgan from "morgan";
 import { errorMiddleware } from "./middlewares/index.js";
 import { WebSocketServer } from "ws";
 import path from 'path'
+import fs from 'fs'
 
 const app: Express = express();
 const port: string | number = process.env.PORT || 8080;
-const server = http.createServer(app);
+
+const cert = fs.readFileSync(path.join(process.cwd(), '/ssl-certificate/certificate.crt'));
+const key = fs.readFileSync(path.join(process.cwd(), '/ssl-certificate/private.key'));
+
+const server = http.createServer({
+  key,
+  cert
+}, app);
 
 /* Middlewares */
 app.use(morgan("dev"));
