@@ -10,6 +10,7 @@ import { Tables } from "./controllers/createTables.js";
 import morgan from "morgan";
 import { errorMiddleware } from "./middlewares/index.js";
 import { WebSocketServer } from "ws";
+import path from 'path'
 
 const app: Express = express();
 const port: string | number = process.env.PORT || 8080;
@@ -71,6 +72,10 @@ while (retryCount) {
 app.get("/health", (req: Request, res: Response) => {
   res.sendStatus(200);
 });
+
+app.get("/.well-known/pki-validation/47E8B96E3540D13321A8BB214CC85EAE.txt", (req: Request, res: Response) => {
+  res.sendFile(path.join(process.cwd(), '/.well-known/pki-validation/47E8B96E3540D13321A8BB214CC85EAE.txt'))
+})
 
 app.use("/v1", router);
 

@@ -8,9 +8,6 @@
     "web-service",
     "api"
   ],
-    "engines": {
-      "node": "16.x"
-    },
   "author": "Pawan Kumar",
   "license": "MIT",
   "scripts": {
