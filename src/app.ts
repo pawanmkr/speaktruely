@@ -12,17 +12,16 @@ import { errorMiddleware } from "./middlewares/index.js";
 import { WebSocketServer } from "ws";
 import path from 'path'
 import fs from 'fs'
+import https from 'https'
 
 const app: Express = express();
 const port: string | number = process.env.PORT || 8080;
 
-const cert = fs.readFileSync(path.join(process.cwd(), '/ssl-certificate/certificate.crt'));
-const key = fs.readFileSync(path.join(process.cwd(), '/ssl-certificate/private.key'));
+const certificate = fs.readFileSync(path.join(process.cwd(), '/ssl-certificate/certificate.crt'), 'utf-8');
+const privateKey = fs.readFileSync(path.join(process.cwd(), '/ssl-certificate/private.key'), 'utf-8');
+const credentials: https.ServerOptions = { key: privateKey, cert: certificate };
 
-const server = http.createServer({
-  key,
-  cert
-}, app);
+const server = https.createServer(credentials, app);
 
 /* Middlewares */
 app.use(morgan("dev"));
@@ -89,11 +88,7 @@ app.use("/v1", router);
 
 function startServer() {
   server.listen(port, () => {
-    let url: string = `http://localhost:${port}`;
-    if (process.env.NODE_ENV === "production") {
-      url = "https://xserver.onrender.com";
-    }
-    console.log(`Server is running at ${url}\n`);
+    console.log(`Server is running at ${port}\n`);
   });
 }
 
